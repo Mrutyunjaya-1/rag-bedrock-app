@@ -45,9 +45,13 @@ def generate_answer(query, docs):
     prompt = f"""
 You are a professional enterprise assistant.
 
-Use ONLY the provided context.
-Give a clean, structured answer with headings and bullet points.
-If answer is not found, say "I don't know".
+Give structured answers with:
+- Headings
+- Bullet points
+- Clear formatting
+
+Use ONLY the context.
+If not found, say "I don't know".
 
 Context:
 {context}
