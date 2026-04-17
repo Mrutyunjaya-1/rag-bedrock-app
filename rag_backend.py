@@ -3,7 +3,7 @@ import json
 
 # ---------------- CONFIG ----------------
 REGION = "us-east-1"
-KNOWLEDGE_BASE_ID = "BRUJBHZIUK"
+KNOWLEDGE_BASE_ID = "BRUJBHZIUK"  # replace if needed
 
 # ---------------- CLIENTS ----------------
 bedrock_runtime = boto3.client(
@@ -16,69 +16,88 @@ bedrock_agent = boto3.client(
     region_name=REGION
 )
 
-
+# ---------------- RETRIEVE ----------------
 def retrieve_docs(query):
-    response = bedrock_agent.retrieve(
-        knowledgeBaseId=KNOWLEDGE_BASE_ID,
-        retrievalQuery={"text": query},
-        retrievalConfiguration={
-            "vectorSearchConfiguration": {
-                "numberOfResults": 5
+    try:
+        response = bedrock_agent.retrieve(
+            knowledgeBaseId=KNOWLEDGE_BASE_ID,
+            retrievalQuery={"text": query},
+            retrievalConfiguration={
+                "vectorSearchConfiguration": {
+                    "numberOfResults": 5
+                }
             }
-        }
-    )
+        )
 
-    docs = []
-    sources = []
+        docs = []
+        sources = []
 
-    for r in response["retrievalResults"]:
-        docs.append(r["content"]["text"])
+        for r in response.get("retrievalResults", []):
+            docs.append(r["content"]["text"])
 
-        src = r.get("location", {}).get("s3Location", {}).get("uri", "Unknown")
-        sources.append(src)
+            src = r.get("location", {}).get("s3Location", {}).get("uri", "Unknown")
+            sources.append(src)
 
-    return docs, sources
+        return docs, sources
 
+    except Exception as e:
+        print("❌ Retrieval Error:", e)
+        return [], []
+
+# ---------------- GENERATE ----------------
 def generate_answer(query, docs):
-    context = "\n\n".join(docs)
+    if not docs:
+        return "I don't know based on the provided documents."
+
+    # Limit context to avoid high cost & latency
+    context = "\n\n".join(docs[:3])
 
     prompt = f"""
-You are a professional enterprise assistant.
+You are a professional enterprise knowledge assistant.
 
-Give structured answers with:
-- Headings
-- Bullet points
-- Clear formatting
+Your task is to answer the user's question using ONLY the provided context.
 
-Use ONLY the context.
-If not found, say "I don't know".
+### Instructions:
+- Provide a clear, structured, and professional answer
+- Use headings and bullet points where appropriate
+- Be concise but informative
+- Do NOT make up information
+- If the answer is not present in the context, respond with: "I don't know based on the provided documents"
 
-Context:
+### Context:
 {context}
 
-Question:
+### Question:
 {query}
+
+### Answer:
 """
 
-    response = bedrock_runtime.converse(
-        modelId="amazon.nova-lite-v1:0",
-        messages=[
-            {
-                "role": "user",
-                "content": [{"text": prompt}]
-            }
-        ]
-    )
+    try:
+        response = bedrock_runtime.converse(
+            modelId="amazon.nova-lite-v1:0",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"text": prompt}]
+                }
+            ]
+        )
 
-    return response["output"]["message"]["content"][0]["text"]
+        return response["output"]["message"]["content"][0]["text"]
+
+    except Exception as e:
+        print("❌ Generation Error:", e)
+        return "Error generating response. Please try again."
 
 # ---------------- MAIN ----------------
 def get_answer(query):
     docs, sources = retrieve_docs(query)
 
     if not docs:
-        return "No relevant data found.", []
+        return "I don't know based on the provided documents.", []
 
+    # Clean source names
     sources = list(set([s.split("/")[-1] for s in sources]))
 
     answer = generate_answer(query, docs)
