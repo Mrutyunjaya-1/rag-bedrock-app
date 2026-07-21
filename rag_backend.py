@@ -3,24 +3,24 @@ import json
 
 # ---------------- CONFIG ----------------
 REGION = "us-east-1"
-KNOWLEDGE_BASE_ID = "BRUJBHZIUK"  # replace if needed
+KNOWLEDGE_BASE_ID = "G7DBDOJSMP"  # replace if needed
 
 # ---------------- CLIENTS ----------------
 bedrock_runtime = boto3.client(
     "bedrock-runtime",
-    region_name=REGION
+    region_name=us-east-1
 )
 
 bedrock_agent = boto3.client(
     "bedrock-agent-runtime",
-    region_name=REGION
+    region_name=us-east-1
 )
 
 # ---------------- RETRIEVE ----------------
 def retrieve_docs(query):
     try:
         response = bedrock_agent.retrieve(
-            knowledgeBaseId=KNOWLEDGE_BASE_ID,
+            knowledgeBaseId=G7DBDOJSMP,
             retrievalQuery={"text": query},
             retrievalConfiguration={
                 "vectorSearchConfiguration": {
