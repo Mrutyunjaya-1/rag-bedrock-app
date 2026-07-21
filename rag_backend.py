@@ -8,19 +8,19 @@ KNOWLEDGE_BASE_ID = "G7DBDOJSMP"  # replace if needed
 # ---------------- CLIENTS ----------------
 bedrock_runtime = boto3.client(
     "bedrock-runtime",
-    region_name=us-east-1
+    region_name=REGION
 )
 
 bedrock_agent = boto3.client(
     "bedrock-agent-runtime",
-    region_name=us-east-1
+    region_name=REGION
 )
 
 # ---------------- RETRIEVE ----------------
 def retrieve_docs(query):
     try:
         response = bedrock_agent.retrieve(
-            knowledgeBaseId=G7DBDOJSMP,
+            knowledgeBaseId=KNOWLEDGE_BASE_ID,
             retrievalQuery={"text": query},
             retrievalConfiguration={
                 "vectorSearchConfiguration": {
