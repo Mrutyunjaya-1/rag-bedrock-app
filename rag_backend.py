@@ -24,7 +24,7 @@ def retrieve_docs(query):
             retrievalQuery={"text": query},
             retrievalConfiguration={
                 "vectorSearchConfiguration": {
-                    "numberOfResults": 5
+                    "numberOfResults": 2
                 }
             }
         )
@@ -34,7 +34,6 @@ def retrieve_docs(query):
 
         for r in response.get("retrievalResults", []):
             docs.append(r["content"]["text"])
-
             src = r.get("location", {}).get("s3Location", {}).get("uri", "Unknown")
             sources.append(src)
 
@@ -50,7 +49,7 @@ def generate_answer(query, docs):
         return "I don't know based on the provided documents."
 
     # Limit context to avoid high cost & latency
-    context = "\n\n".join(docs[:3])
+    context = "\n\n".join(docs)
 
     prompt = f"""
 You are a professional enterprise knowledge assistant.
@@ -98,8 +97,7 @@ def get_answer(query):
         return "I don't know based on the provided documents.", []
 
     # Clean source names
-    sources = list(set([s.split("/")[-1] for s in sources]))
-
+    sources = list(dict.fromkeys([s.split("/")[-1] for s in sources]))[:2]
     answer = generate_answer(query, docs)
 
     return answer, sources
