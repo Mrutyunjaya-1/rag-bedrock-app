@@ -3,7 +3,7 @@ import json
 
 # ---------------- CONFIG ----------------
 REGION = "us-east-1"
-KNOWLEDGE_BASE_ID = "G7DBDOJSMP"  # replace if needed
+KNOWLEDGE_BASE_ID = "FNCVWUKWQY"  # replace if needed
 
 # ---------------- CLIENTS ----------------
 bedrock_runtime = boto3.client(
